@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+rapidfuzz
+scikit-learn
+numpy
+pydantic

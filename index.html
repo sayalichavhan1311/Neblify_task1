@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayMatch System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00d4aa 0%, #0099cc 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tasks {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-card h2 {
+            color: #00d4aa;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #00d4aa;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #00d4aa;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #00a87a;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #00d4aa;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            border-left: 4px solid #00d4aa;
+            display: none;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-content {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+            max-height: 500px;
+            border: 1px solid #ddd;
+        }
+
+        .result-content pre {
+            margin: 0;
+            font-size: 0.9em;
+            color: #333;
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid #00d4aa;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-key {
+            color: #00d4aa;
+            font-weight: 600;
+        }
+
+        .json-string {
+            color: #22863a;
+        }
+
+        .json-number {
+            color: #005cc5;
+        }
+
+        .json-boolean {
+            color: #d73a49;
+        }
+
+        .error {
+            background: #fee !important;
+            border-left-color: #f44 !important;
+        }
+
+        .error .result-content pre {
+            border-left-color: #f44 !important;
+            color: #c33;
+        }
+
+        .success {
+            background: #efe !important;
+            border-left-color: #4f4 !important;
+        }
+
+        .success .result-content pre {
+            border-left-color: #4f4 !important;
+            background: #f0f8f0 !important;
+        }
+
+        .transaction-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .transaction-id {
+            padding: 8px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85em;
+        }
+
+        .transaction-id:hover {
+            background: #00d4aa;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .demo-ids {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+        }
+
+        .demo-ids h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .tasks {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .task-card {
+                padding: 20px;
+            }
+
+            .stat-box {
+                padding: 12px;
+            }
+
+            .result-content {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.4em;
+            }
+
+            .transaction-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .transaction-id {
+                padding: 6px;
+                font-size: 0.75em;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 0.95em;
+            }
+
+            .task-card {
+                padding: 15px;
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00d4aa;
+        }
+
+        .stat-box .label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯PayMatch System</h1>
+            <p></p>
+        </header>
+
+        <div class="tasks">
+            <!-- TASK 1 -->
+            <div class="task-card">
+                <h2>Task-1: Match Users</h2>
+                <p style="color: #666; margin-bottom: 15px;">Find users matching a transaction using fuzzy string matching.</p>
+                
+                <div class="form-group">
+                    <label for="task1-transaction">Transaction ID:</label>
+                    <input type="text" id="task1-transaction" placeholder="e.g., caqjJtrI" value="caqjJtrI">
+                </div>
+
+                <button onclick="testTask1()">🔍 Find Matching Users</button>
+
+                <div class="loading" id="task1-loading">
+                    <p>⏳ Loading...</p>
+                </div>
+
+                <div class="result" id="task1-result">
+                    <h3>Results:</h3>
+                    <div class="result-content">
+                        <pre id="task1-output"></pre>
+                    </div>
+                </div>
+
+                <div class="demo-ids">
+                    <h4>Quick Test IDs:</h4>
+                    <div class="transaction-grid">
+                        <div class="transaction-id" onclick="setTask1('caqjJtrI')">caqjJtrI</div>
+                        <div class="transaction-id" onclick="setTask1('AcwQVVtq')">AcwQVVtq</div>
+                        <div class="transaction-id" onclick="setTask1('RAZbbmLX')">RAZbbmLX</div>
+                        <div class="transaction-id" onclick="setTask1('m1wOOZNz')">m1wOOZNz</div>
+                        <div class="transaction-id" onclick="setTask1('YPOEKpLs')">YPOEKpLs</div>
+                        <div class="transaction-id" onclick="setTask1('J7os8g9d')">J7os8g9d</div>
+                        <div class="transaction-id" onclick="setTask1('uU2NRqif')">uU2NRqif</div>
+                        <div class="transaction-id" onclick="setTask1('Ysop2Dzq')">Ysop2Dzq</div>
+                        <div class="transaction-id" onclick="setTask1('86OWU7JD')">86OWU7JD</div>
+                        <div class="transaction-id" onclick="setTask1('kXAGOWZ4')">kXAGOWZ4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TASK 2 -->
+            <div class="task-card">
+                <h2>Task-2: Similar Transactions</h2>
+                <p style="color: #666; margin-bottom: 15px;">Find similar transactions using TF-IDF vectorization.</p>
+                
+                <div class="form-group">
+                    <label for="task2-transaction">Transaction ID:</label>
+                    <input type="text" id="task2-transaction" placeholder="e.g., caqjJtrI" value="caqjJtrI">
+                </div>
+
+                <div class="form-group">
+                    <label for="task2-topk">Number of Results (top_k):</label>
+                    <input type="number" id="task2-topk" min="1" max="10" value="3">
+                </div>
+
+                <button onclick="testTask2()">🔗 Find Similar Transactions</button>
+
+                <div class="loading" id="task2-loading">
+                    <p>⏳ Loading...</p>
+                </div>
+
+                <div class="result" id="task2-result">
+                    <h3>Results:</h3>
+                    <div class="result-content">
+                        <pre id="task2-output"></pre>
+                    </div>
+                </div>
+
+                <div class="demo-ids">
+                    <h4>Quick Test IDs:</h4>
+                    <div class="transaction-grid">
+                        <div class="transaction-id" onclick="setTask2('caqjJtrI')">caqjJtrI</div>
+                        <div class="transaction-id" onclick="setTask2('AcwQVVtq')">AcwQVVtq</div>
+                        <div class="transaction-id" onclick="setTask2('RAZbbmLX')">RAZbbmLX</div>
+                        <div class="transaction-id" onclick="setTask2('m1wOOZNz')">m1wOOZNz</div>
+                        <div class="transaction-id" onclick="setTask2('YPOEKpLs')">YPOEKpLs</div>
+                        <div class="transaction-id" onclick="setTask2('J7os8g9d')">J7os8g9d</div>
+                        <div class="transaction-id" onclick="setTask2('uU2NRqif')">uU2NRqif</div>
+                        <div class="transaction-id" onclick="setTask2('Ysop2Dzq')">Ysop2Dzq</div>
+                        <div class="transaction-id" onclick="setTask2('86OWU7JD')">86OWU7JD</div>
+                        <div class="transaction-id" onclick="setTask2('kXAGOWZ4')">kXAGOWZ4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Project Statistics</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="number">101</div>
+                    <div class="label">Users in Database</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">191+</div>
+                    <div class="label">Transactions</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">50%</div>
+                    <div class="label">Match Threshold</div>
+                </div>
+            </div>
+            <h3 style="color: #667eea; margin-top: 20px; margin-bottom: 10px;">API Endpoints:</h3>
+            <ul style="line-height: 1.8; color: #666;">
+                <li><strong>Task-1:</strong> GET /match_users/{transaction_id}</li>
+                <li><strong>Task-2:</strong> POST /similar_transactions</li>
+                <li><strong>Docs:</strong> GET /docs (Swagger UI)</li>
+            </ul>
+ 
+        </div>
+    </div>
+
+    <script>
+        // Intelligent API URL detection
+        // If the page is served from http://127.0.0.1:port or http://localhost:port, use that origin
+        // Otherwise (for Live Server or file://), point to the API at http://127.0.0.1:5000
+        const API_URL = ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '5000' || window.location.port === ''))
+            ? window.location.origin
+            : 'http://127.0.0.1:5000';
+        
+        console.log('Page URL:', window.location.href);
+        console.log('API URL:', API_URL);
+
+        // Display current connection status
+        let isConnected = false;
+
+        function setTask1(id) {
+            document.getElementById('task1-transaction').value = id;
+            testTask1();
+        }
+
+        function setTask2(id) {
+            document.getElementById('task2-transaction').value = id;
+            testTask2();
+        }
+
+        async function testTask1() {
+            const transactionId = document.getElementById('task1-transaction').value.trim();
+            
+            if (!transactionId) {
+                showError('task1', 'Please enter a transaction ID');
+                return;
+            }
+
+            showLoading('task1');
+
+            try {
+                const response = await fetch(`${API_URL}/match_users/${transactionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('task1', data);
+                } else {
+                    showError('task1', data.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showError('task1', `Network error: ${error.message}. Make sure the server is running on ${API_URL}`);
+            }
+        }
+
+        async function testTask2() {
+            const transactionId = document.getElementById('task2-transaction').value.trim();
+            const topK = document.getElementById('task2-topk').value;
+
+            if (!transactionId) {
+                showError('task2', 'Please enter a transaction ID');
+                return;
+            }
+
+            showLoading('task2');
+
+            try {
+                const response = await fetch(`${API_URL}/similar_transactions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        top_k: parseInt(topK)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('task2', data);
+                } else {
+                    showError('task2', data.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showError('task2', `Network error: ${error.message}. Make sure the server is running on ${API_URL}`);
+            }
+        }
+
+        function showLoading(task) {
+            document.getElementById(`${task}-loading`).classList.add('active');
+            document.getElementById(`${task}-result`).classList.remove('active');
+        }
+
+        function formatJson(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        function showSuccess(task, data) {
+            document.getElementById(`${task}-loading`).classList.remove('active');
+            const result = document.getElementById(`${task}-result`);
+            result.classList.add('active', 'success');
+            result.classList.remove('error');
+            const formattedJson = formatJson(data);
+            document.getElementById(`${task}-output`).textContent = formattedJson;
+        }
+
+        function showError(task, message) {
+            document.getElementById(`${task}-loading`).classList.remove('active');
+            const result = document.getElementById(`${task}-result`);
+            result.classList.add('active', 'error');
+            result.classList.remove('success');
+            const errorObj = {
+                "error": message,
+                "status": "failed",
+                "timestamp": new Date().toISOString(),
+                "api_url": API_URL
+            };
+            const formattedJson = formatJson(errorObj);
+            document.getElementById(`${task}-output`).textContent = formattedJson;
+        }
+
+        // Test on page load
+        window.addEventListener('load', async () => {
+            // Show initial message while checking connection
+            document.getElementById('task1-loading').classList.add('active');
+            document.getElementById('task2-loading').classList.add('active');
+            
+            // Load initial data
+            setTimeout(() => {
+                testTask1();
+                testTask2();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
